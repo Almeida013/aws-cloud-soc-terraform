@@ -88,12 +88,18 @@ resource "aws_security_group" "pfsense_sg" {
 
 # 5. Cria a Instancia EC2 para ser o firewall
 resource "aws_instance" "pfsense_ec2" {
-  ami           = "ami-0c7217cdde317cfec" // Ubuntu Server 22.04 LTS para us-east-1
-  instance_type = "t3.micro"              // Tipo elegível para o Free Tier
+  ami           = "ami-0c7217cdde317cfec" 
+  instance_type = "t3.small"  # <--- VOLTAMOS PARA A SMALL
+  
+  subnet_id              = aws_subnet.public_subnet.id
+  vpc_security_group_ids = [aws_security_group.pfsense_sg.id]
+  key_name               = "soc-keypair"
 
-  subnet_id                   = aws_subnet.public_subnet.id
-  vpc_security_group_ids      = [aws_security_group.pfsense_sg.id]
-  key_name                    = "soc-keypair" // O nome da chave que você criou no console
+  # Mantemos o disco grande para caber o Docker e o Swap
+  root_block_device {
+    volume_size = 20
+    volume_type = "gp3"
+  }
 
   tags = {
     Name = "soc-project-firewall-server"
