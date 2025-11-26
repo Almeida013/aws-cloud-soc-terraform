@@ -94,8 +94,11 @@ O ambiente foi validado através de um ataque simulado contra a máquina vítima
 3.  O evento foi correlacionado pelo Manager.
 4.  O Dashboard gerou um alerta de **Nível 5**.
 
-**📸 Evidência 1: Dashboard Detectando o Ataque**
-![alt text](image.png)
+
+### 🎥 Demonstração Prática
+Aqui podemos ver o alerta sendo gerado em tempo real após o comando SSH:
+
+![Demonstração do Wazuh](./demo-wazuh.gif)
 
 
 ---
