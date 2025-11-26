@@ -83,6 +83,22 @@ resource "aws_security_group" "pfsense_sg" {
   tags = {
     Name = "soc-project-pfsense-sg"
   }
+
+  ingress {
+    description = "Wazuh Agent Registration"
+    from_port   = 1515
+    to_port     = 1515
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+
+  ingress {
+    description = "Wazuh Agent Events"
+    from_port   = 1514
+    to_port     = 1514
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 
@@ -103,5 +119,20 @@ resource "aws_instance" "pfsense_ec2" {
 
   tags = {
     Name = "soc-project-firewall-server"
+  }
+}
+
+# --- CAPÍTULO 4: MÁQUINA VÍTIMA ---
+
+resource "aws_instance" "victim_ec2" {
+  ami           = "ami-0c7217cdde317cfec" # O mesmo Ubuntu Server
+  instance_type = "t3.micro"              # Uma máquina menor e mais barata para ser a vítima
+
+  subnet_id                   = aws_subnet.public_subnet.id
+  vpc_security_group_ids      = [aws_security_group.pfsense_sg.id] # Vamos usar o mesmo "crachá" de segurança
+  key_name                    = "soc-keypair"
+
+  tags = {
+    Name = "soc-victim-server"
   }
 }
