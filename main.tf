@@ -99,6 +99,14 @@ resource "aws_security_group" "pfsense_sg" {
     protocol    = "tcp"
     cidr_blocks = ["0.0.0.0/0"]
   }
+
+  ingress {
+    description = "n8n Workflow Automation"
+    from_port   = 5678
+    to_port     = 5678
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
 }
 
 
@@ -134,5 +142,19 @@ resource "aws_instance" "victim_ec2" {
 
   tags = {
     Name = "soc-victim-server"
+  }
+}
+
+# --- MÁQUINA ATACANTE (RED TEAM) ---
+resource "aws_instance" "attacker_ec2" {
+  ami           = "ami-0c7217cdde317cfec" # Ubuntu Server
+  instance_type = "t3.micro"              # Baratinha, só pra rodar ssh
+  
+  subnet_id                   = aws_subnet.public_subnet.id
+  vpc_security_group_ids      = [aws_security_group.pfsense_sg.id]
+  key_name                    = "soc-keypair"
+
+  tags = {
+    Name = "soc-attacker-server"
   }
 }
