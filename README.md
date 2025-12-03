@@ -183,7 +183,6 @@ Durante o desenvolvimento, superei limitações reais de ambiente Cloud:
 *(Insira aqui o GIF ou Link do seu vídeo)*
 
 
-
 ### Desenvolvido por **Kaike Almeida**
 🚀 *DevSecOps & Cloud Security Enthusiast*
 
