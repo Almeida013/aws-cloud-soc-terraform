@@ -1,4 +1,4 @@
-div align="center">
+<div align="center">
 
 # 🛡️ SOC na Nuvem: Detecção e Resposta Automatizada (SOAR)
 ## AWS | Wazuh | n8n | Terraform
@@ -25,7 +25,7 @@ div align="center">
 3. [Desafios de Engenharia](#3-desafios-de-engenharia-troubleshooting)
 4. [Roadmap Executado](#4-roadmap-executado)
 5. [Resultados e Evidências](#5-resultados-e-evidências-poc)
-6. [Como Reproduzir](#6-como-reproduzir)
+
 
 ---
 
@@ -80,7 +80,6 @@ Durante o desenvolvimento, diversas limitações de ambiente Cloud e Hardware fo
 
 ### 🎥 O Ataque e o Bloqueio
 > *(Insira aqui seu GIF ou Link do vídeo mostrando o terminal do atacante travando)*
-
 
 
 ### Desenvolvido por **Kaike Almeida**
