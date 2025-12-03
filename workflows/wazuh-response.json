@@ -1,0 +1,116 @@
+{
+  "name": "Wazuh Automated Response",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "wazuh-alert",
+        "options": {}
+      },
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        460,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "jsCode": "// Extrai o IP do atacante do log do Wazuh\nconst texto = items[0].json.body.attachments[0].text;\nconst regexIP = /\\b\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\b/;\nconst resultado = texto.match(regexIP);\n\nif (resultado) {\n  return [{ json: { ip_atacante: resultado[0] } }];\n} else {\n  return [{ json: { erro: \"Nenhum IP encontrado\" } }];\n}"
+      },
+      "name": "Code",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 1,
+      "position": [
+        680,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://ec2.us-east-1.amazonaws.com/",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "aws",
+        "sendBody": true,
+        "contentType": "form-urlencoded",
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "Action",
+              "value": "CreateNetworkAclEntry"
+            },
+            {
+              "name": "Version",
+              "value": "2016-11-15"
+            },
+            {
+              "name": "NetworkAclId",
+              "value": "INSIRA_SEU_ACL_ID_AQUI"
+            },
+            {
+              "name": "RuleNumber",
+              "value": "100"
+            },
+            {
+              "name": "Protocol",
+              "value": "-1"
+            },
+            {
+              "name": "RuleAction",
+              "value": "deny"
+            },
+            {
+              "name": "Egress",
+              "value": "false"
+            },
+            {
+              "name": "CidrBlock",
+              "value": "={{ $json.ip_atacante }}/32"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "name": "AWS Block IP",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        900,
+        300
+      ],
+      "credentials": {
+        "aws": {
+          "id": "YOUR_CREDENTIAL_ID",
+          "name": "AWS Robot"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "AWS Block IP",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  }
+}

@@ -1,138 +1,270 @@
-# 🛡️ Projeto: SOC na Nuvem com IaC (Infrastructure as Code)
+<div align="center">
 
-![Status](https://img.shields.io/badge/status-ativo-brightgreen)
+# 🛡️ SOC na Nuvem: Detecção e Resposta Automatizada (SOAR)
+## AWS | Wazuh | n8n | Terraform
+
+![Status Project](https://img.shields.io/badge/status-concluído-brightgreen?style=for-the-badge)
 ![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
 ![Terraform](https://img.shields.io/badge/Terraform-%237B42BC.svg?style=for-the-badge&logo=terraform&logoColor=white)
-![Docker](https://img.shields.io/badge/Docker-%232496ED.svg?style=for-the-badge&logo=docker&logoColor=white)
-![Wazuh](https://img.shields.io/badge/Wazuh-SIEM-blue?style=for-the-badge)
+![Wazuh](https://img.shields.io/badge/Wazuh-SIEM-blue?style=for-the-badge&logo=wazuh&logoColor=white)
+![n8n](https://img.shields.io/badge/n8n-SOAR-ff6d5a?style=for-the-badge&logo=n8n&logoColor=white)
 
-Este repositório documenta a engenharia e construção de um **Centro de Operações de Segurança (SOC)** funcional na AWS. O ambiente é provisionado 100% via código (Terraform) e foca na detecção de ameaças em tempo real, superando restrições de hardware e custos de nuvem.
+<p align="center">
+  <b>Simulação de um Centro de Operações de Segurança (SOC) com Infraestrutura como Código (IaC).</b><br>
+  Detecção de intrusão e resposta automática a incidentes (SOAR) em ambiente Cloud.
+</p>
+
+</div>
+
+---
+
+## 📋 Tabela de Conteúdos
+
+1. [Arquitetura da Solução](#1-arquitetura-da-solução)
+2. [Fluxo de Defesa](#2-fluxo-de-defesa-o-que-ele-faz)
+3. [Desafios de Engenharia](#3-desafios-de-engenharia-troubleshooting)
+4. [Roadmap Executado](#4-roadmap-executado)
+5. [Resultados e Evidências](#5-resultados-e-evidências-poc)
+6. [Como Reproduzir](#6-como-reproduzir)
+
+---
+
+## 1. Arquitetura da Solução
+
+O ambiente foi desenhado para simular um cenário real de **Red Team vs Blue Team**, composto por:
+
+* ☁️ **Infraestrutura AWS:** VPC Customizada, Subnets Públicas, Internet Gateway e Security Groups configurados via Terraform.
+* 👁️ **Wazuh (SIEM):** Responsável pela coleta de logs, análise de integridade de arquivos (FIM) e detecção de intrusão. Rodando em Docker.
+* 🐙 **n8n (Automação/SOAR):** Orquestrador de resposta. Recebe o alerta do Wazuh e executa ações diretas na API da AWS.
+* 🎯 **Máquina Vítima:** Instância EC2 propositalmente vulnerável para testes de penetração.
+* ⚔️ **Máquina Atacante:** Instância "Kali Linux/Red Team" para simular invasões externas.
+
+---
+
+## 2. Fluxo de Defesa (O Que Ele Faz?)
+
+A automação segue um fluxo lógico de **Detecção -> Análise -> Resposta**:
+
+1.  🔴 **Ataque:** Um atacante tenta realizar *Brute Force SSH* contra a infraestrutura.
+2.  🔍 **Detecção:** O Agente Wazuh na máquina vítima identifica a anomalia nos logs de autenticação.
+3.  🚨 **Alerta:** O Wazuh Manager gera um alerta de **Nível 10** e dispara um Webhook.
+4.  ⚙️ **Orquestração:** O **n8n** captura o JSON do alerta e extrai o IP de origem do atacante via Regex.
+5.  🛡️ **Resposta:** O n8n autentica na AWS e injeta uma regra na **Network ACL (NACL)** bloqueando todo tráfego vindo daquele IP.
+6.  🔔 **Notificação:** Um relatório detalhado do incidente é enviado instantaneamente para o canal do **Discord** da equipe de segurança.
+
+---
+
+## 3. Desafios de Engenharia (Troubleshooting)
+
+Durante o desenvolvimento, diversas limitações de ambiente Cloud e Hardware foram superadas:
+
+| Desafio | Solução Aplicada |
+| :--- | :--- |
+| **Recursos Limitados (RAM)** | Implementação de **4GB de Swap** para rodar a stack Java/Elastic do Wazuh em instância `t3.small` (evitando falhas por OOM - Out of Memory). |
+| **Instabilidade de Deploy** | Migração de scripts de instalação manuais para **Docker Containers**, garantindo isolamento, versionamento e idempotência da aplicação. |
+| **Cotas da AWS** | Contorno de restrições de conta AWS (que bloqueava instâncias maiores) através da otimização de software e expansão dinâmica de disco EBS (20GB). |
+
+---
+
+## 4. Roadmap Executado
+
+- [x] **Fase 1: Infraestrutura (IaC)** - Provisionamento de rede e servidores com Terraform.
+- [x] **Fase 2: Monitoramento** - Deploy do Wazuh Manager e instalação dos Agentes.
+- [x] **Fase 3: Detecção** - Criação de regras customizadas para identificar ataques SSH.
+- [x] **Fase 4: Automação (SOAR)** - Integração completa: Wazuh ➡️ n8n ➡️ AWS VPC.
+- [x] **Fase 5: Teste de Fogo** - Simulação real de ataque e validação do bloqueio automático.
+
+---
+
+## 5. Resultados e Evidências (PoC)
+
+### 🎥 O Ataque e o Bloqueio
+> *(Insira aqui seu GIF ou Link do vídeo mostrando o terminal do atacante travando)*
+
+### **6. Como Reproduzir o Lab**
+
+Siga este passo a passo para subir o ambiente completo em sua conta AWS.
+
+#### **Pré-requisitos**
+* AWS CLI instalado e configurado.
+* Terraform instalado.
+* Git instalado.
+
+#### **Passo 1: Clonar e Provisionar (Terraform)**
+Baixe o código e crie a infraestrutura na AWS.
+
+```bash
+git clone [https://github.com/Almeida013/aws-cloud-soc-terraform](https://github.com/Almeida013/aws-cloud-soc-terraform)
+cd aws-cloud-soc-terraform
+
+# Inicialize e aplique o plano
+terraform init
+terraform apply -auto-approve
+
+Com certeza! Vou reescrever o seu README.md completo.
+
+A seção "6. Como Reproduzir" foi totalmente detalhada para ser "à prova de erros". Ela explica como usar os arquivos que acabamos de criar (setup.sh e workflow.json) para que qualquer pessoa (ou você no futuro) consiga subir esse laboratório em minutos sem dor de cabeça.
+
+Copie o código abaixo e substitua tudo no seu arquivo README.md.
+
+Markdown
+
+# 🛡️ SOC na Nuvem: Detecção e Resposta Automatizada (SOAR)
+
+![Status](https://img.shields.io/badge/status-concluído-brightgreen)
+![AWS](https://img.shields.io/badge/AWS-%23FF9900.svg?style=for-the-badge&logo=amazon-aws&logoColor=white)
+![Terraform](https://img.shields.io/badge/Terraform-%237B42BC.svg?style=for-the-badge&logo=terraform&logoColor=white)
+![Wazuh](https://img.shields.io/badge/Wazuh-SIEM-blue?style=for-the-badge)
+![n8n](https://img.shields.io/badge/n8n-SOAR-ff6d5a?style=for-the-badge&logo=n8n&logoColor=white)
+![Docker](https://img.shields.io/badge/Docker-%232496ED.svg?style=for-the-badge&logo=docker&logoColor=white)
+
+Este projeto implementa um **Centro de Operações de Segurança (SOC)** completo na AWS, provisionado via **Infraestrutura como Código (IaC)**. O diferencial é a arquitetura **SOAR** (Security Orchestration, Automation, and Response), capaz de detectar ataques e bloquear os invasores automaticamente no firewall da nuvem.
 
 ---
 
 ### 📋 Tabela de Conteúdos
-1. [Visão Geral e Objetivos](#1-visão-geral-e-objetivos)
-2. [Arquitetura e Tech Stack](#2-arquitetura-e-tech-stack)
-3. [Desafios de Engenharia (Troubleshooting)](#3-desafios-de-engenharia-troubleshooting)
-4. [Roadmap do Projeto](#4-roadmap-do-projeto)
-5. [Resultados e Evidências (PoC)](#5-resultados-e-evidências-poc)
+1. [Arquitetura da Solução](#1-arquitetura-da-solução)
+2. [Fluxo de Defesa](#2-fluxo-de-defesa)
+3. [Desafios de Engenharia](#3-desafios-de-engenharia)
+4. [Roadmap Executado](#4-roadmap-executado)
+5. [Resultados e Evidências](#5-resultados-e-evidências)
 6. [Como Reproduzir o Lab](#6-como-reproduzir-o-lab)
 7. [Contato](#7-contato)
 
 ---
 
-### **1. Visão Geral e Objetivos**
+### **1. Arquitetura da Solução**
 
-A falta de visibilidade é o maior risco na nuvem. Este projeto resolve esse problema criando um ambiente monitorado onde cada tentativa de acesso é registrada e analisada.
-
-**Objetivos Técnicos:**
-* Provisionar infraestrutura segura na AWS usando Terraform.
-* Implementar um SIEM (Wazuh) para análise de logs e detecção de intrusão.
-* Demonstrar ciclo de vida de DevSecOps (Build -> Attack -> Detect -> Destroy).
-
----
-
-### **2. Arquitetura e Tech Stack**
-
-O projeto utiliza uma arquitetura "All-in-One" otimizada para baixo custo, rodando sobre containers.
-
-* **Cloud Provider:** AWS (VPC, Subnets Públicas, EC2, Security Groups, Internet Gateway).
-* **Infrastructure as Code:** Terraform (HCL).
-* **SIEM / EDR:** Wazuh (Manager, Indexer, Dashboard) rodando em **Docker**.
-* **Segurança de Rede:** Controle via Security Groups (Portas 22, 443, 1514, 1515).
-* **Sistema Operacional:** Ubuntu Server 22.04 LTS.
+O ambiente é composto por:
+* **Infraestrutura:** VPC Customizada, Subnets Públicas, Internet Gateway e Security Groups (AWS).
+* **Wazuh (SIEM):** Responsável pela coleta de logs, análise de integridade e detecção de intrusão. Rodando em Docker.
+* **n8n (Automação):** Responsável por orquestrar a resposta. Recebe o alerta do Wazuh e executa ações na AWS.
+* **Máquina Vítima:** Instância EC2 vulnerável para testes de penetração.
+* **Máquina Atacante:** Instância "Red Team" para simular invasões externas.
 
 ---
 
-### **3. Desafios de Engenharia (Troubleshooting)**
+### **2. Fluxo de Defesa**
 
-Durante o desenvolvimento, enfrentei limitações reais de hardware no *Free Tier* da AWS. Abaixo, as soluções de engenharia aplicadas:
+1.  **Ataque:** Um atacante tenta realizar *Brute Force SSH* contra a infraestrutura.
+2.  **Detecção:** O Agente Wazuh identifica a anomalia e envia para o Manager.
+3.  **Alerta:** O Wazuh gera um alerta de Nível 5+ e dispara um Webhook.
+4.  **Orquestração:** O **n8n** recebe o JSON e extrai o IP do atacante via Regex.
+5.  **Resposta:** O n8n chama a API da AWS e cria uma regra na **Network ACL** bloqueando o IP.
+6.  **Notificação:** Um aviso detalhado é enviado para o canal do **Discord**.
+
+---
+
+### **3. Desafios de Engenharia**
+
+Durante o desenvolvimento, superei limitações reais de ambiente Cloud:
 
 | Desafio | Solução Aplicada |
 | :--- | :--- |
-| **Falta de Memória RAM** | Implementação de **4GB de Swap File** via script de *user data*, permitindo rodar o stack Wazuh (Java/Elastic) em uma instância `t3.small`. |
-| **Instabilidade de Instalação** | Migração da instalação via script nativo para **Docker Containers**, garantindo isolamento, idempotência e maior velocidade de deploy. |
-| **Espaço em Disco** | Provisionamento via Terraform de um volume **EBS gp3 de 20GB**, superando o limite padrão de 8GB das instâncias básicas. |
+| **Recursos Limitados** | Implementação de **4GB de Swap** para rodar a stack Java/Elastic do Wazuh em instância `t3.small` sem travar por OOM (Out of Memory). |
+| **Instabilidade de Deploy** | Migração de scripts nativos para **Docker Containers**, garantindo isolamento e idempotência. |
+| **Bloqueio de Hardware** | Contorno de restrições de conta AWS (que bloqueava instâncias maiores) através da otimização de software e expansão de disco EBS (20GB). |
 
 ---
 
-### **4. Roadmap do Projeto**
+### **4. Roadmap Executado**
 
-- [x] **Capítulo 1: A Fundação**
-  - Configuração do ambiente (Terraform, AWS CLI).
-  - Provisionamento da rede base (VPC, Subnet).
-
-- [x] **Capítulo 2: Construindo o Perímetro**
-  - Internet Gateway e Tabelas de Rotas.
-  - Provisionamento de instâncias EC2 com IP público automático.
-
-- [x] **Capítulo 3: O Cérebro do SOC**
-  - Deploy do Wazuh Manager via Docker em instância `t3.small`.
-  - Configuração de Swap e otimização do Linux.
-
-- [x] **Capítulo 4: A Vítima**
-  - Provisionamento de uma instância `t3.micro` separada.
-  - Instalação e registro do **Wazuh Agent**.
-
-- [x] **Capítulo 5: O Teste de Fogo (Attack Simulation)**
-  - Simulação de ataque de **Brute Force SSH**.
-  - Validação dos alertas no Dashboard (Nível 5+).
-
-- [ ] **Capítulo 6: Automação de Resposta (SOAR)**
-  - Integração com **n8n**.
-  - Automação de alertas via Discord/Slack.
+- [x] **Fase 1: Infraestrutura (IaC)** - Provisionamento de rede e servidores com Terraform.
+- [x] **Fase 2: Monitoramento** - Deploy do Wazuh Manager e Agentes.
+- [x] **Fase 3: Detecção** - Criação de regras para identificar ataques SSH.
+- [x] **Fase 4: Automação (SOAR)** - Integração Wazuh -> n8n -> AWS.
+- [x] **Fase 5: Teste de Fogo** - Simulação real de ataque e validação do bloqueio automático.
 
 ---
 
-### **5. Resultados e Evidências (PoC)**
+### **5. Resultados e Evidências**
 
-O ambiente foi validado através de um ataque simulado contra a máquina vítima.
+**🎥 O Ataque e o Bloqueio:**
+*(Insira aqui o GIF ou Link do seu vídeo)*
 
-**Fluxo do Teste:**
-1.  O atacante tentou login via SSH com usuário inexistente ("hacker").
-2.  O Agente Wazuh detectou a falha de autenticação.
-3.  O evento foi correlacionado pelo Manager.
-4.  O Dashboard gerou um alerta de **Nível 5**.
+**🛡️ Dashboard do Wazuh:**
+*(Insira aqui seu print do Dashboard)*
 
-
-### 🎥 Demonstração Prática
-Aqui podemos ver o alerta sendo gerado em tempo real após o comando SSH:
-
-![Demonstração do Wazuh](./demo-wazuh.gif)
-
+**🚫 Bloqueio na AWS:**
+*(Insira aqui o print da regra DENY na AWS)*
 
 ---
 
 ### **6. Como Reproduzir o Lab**
 
-Pré-requisitos: Terraform instalado e credenciais AWS configuradas.
+Siga este passo a passo para subir o ambiente completo em sua conta AWS.
 
-### 1. **Clone o repositório:**
+#### **Pré-requisitos**
+* AWS CLI instalado e configurado.
+* Terraform instalado.
+* Git instalado.
+
+#### **Passo 1: Clonar e Provisionar (Terraform)**
+Baixe o código e crie a infraestrutura na AWS.
+
 ```bash
-   git clone [URL_DO_SEU_REPO]
-   cd aws-cloud-soc-terraform
-   terraform init
-   terraform apply -auto-approve
+git clone [https://github.com/Almeida013/aws-cloud-soc-terraform](https://github.com/Almeida013/aws-cloud-soc-terraform)
+cd aws-cloud-soc-terraform
 
-### Prepara Swap e Docker
- ```bash
- sudo apt update && sudo apt upgrade -y
- sudo fallocate -l 4G /swapfile && sudo chmod 600 /swapfile && sudo mkswap /swapfile && sudo swapon /swapfile
- curl -fsSL [https://get.docker.com](https://get.docker.com) -o get-docker.sh && sudo sh get-docker.sh
- sudo usermod -aG docker ubuntu && sudo apt install docker-compose -y
+# Inicialize e aplique o plano
+terraform init
+terraform apply -auto-approve
+Ao final, o Terraform exibirá os IPs das instâncias (Wazuh, Vítima e Atacante).
 
-### Sobe o Wazuh
- ```bash
- git clone [https://github.com/wazuh/wazuh-docker.git](https://github.com/wazuh/wazuh-docker.git) -b v4.7.5
- cd wazuh-docker/single-node
- sudo docker-compose -f generate-indexer-certs.yml run --rm generator
- sudo docker-compose up -d
+# Passo 2: Configurar o Servidor Wazuh (Automático)
+Acesse a instância soc-project-firewall-server via SSH e execute o script de instalação incluído.
 
-### Limpeza (Destruir tudo para evitar custos):
- ```bash
- terraform destroy -auto-approve
+Bash
 
-### 7. **Contato**
-Kaike Almeida - LinkedIn
+# 1. Conecte-se ao servidor
+ssh -i "soc-keypair.pem" ubuntu@IP_DO_WAZUH
 
-Projeto desenvolvido com foco em aprendizado prático de DevSecOps e Cloud Security.
+# 2. Clone o repositório DENTRO do servidor para pegar o script
+git clone [https://github.com/Almeida013/aws-cloud-soc-terraform](https://github.com/Almeida013/aws-cloud-soc-terraform)
+
+# 3. Dê permissão e execute o script
+chmod +x aws-cloud-soc-terraform/scripts/setup.sh
+./aws-cloud-soc-terraform/scripts/setup.sh
+Este script irá automaticamente configurar o Swap, instalar Docker e subir o Wazuh + n8n.
+
+Passo 3: Configurar a Vítima
+Acesse a instância soc-victim-server e instale o agente.
+
+Bash
+
+# Conecte-se à vítima
+ssh -i "soc-keypair.pem" ubuntu@IP_DA_VITIMA
+
+# Instale o agente apontando para o IP do seu servidor Wazuh
+# (Substitua IP_DO_WAZUH_SERVER pelo IP da máquina criada no passo 1)
+sudo WAZUH_MANAGER="IP_DO_WAZUH_SERVER" apt-get install wazuh-agent=4.7.5-1 -y
+
+# Ative o agente
+sudo systemctl daemon-reload
+sudo systemctl enable wazuh-agent
+sudo systemctl start wazuh-agent
+Passo 4: Configurar a Automação (n8n)
+Acesse o n8n em: http://IP_DO_WAZUH:5678
+
+Crie sua conta de administrador.
+
+Vá em Workflows > Import from File.
+
+Selecione o arquivo workflows/wazuh-response.json (que está na pasta do projeto no seu computador).
+
+Vá em Credentials e configure suas chaves da AWS.
+
+Ative o workflow ("Active").
+
+Pronto! O SOC está funcional. 🚀
+
+---
+
+<div align="center">
+
+### Desenvolvido por **Kaike Almeida**
+🚀 *DevSecOps & Cloud Security Enthusiast*
+
+[LinkedIn](https://www.linkedin.com/in/kaikealmeida) • [GitHub](https://github.com/Almeida013)
+
+</div>
