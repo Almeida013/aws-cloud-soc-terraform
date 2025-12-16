@@ -79,7 +79,7 @@ Durante o desenvolvimento, diversas limitações de ambiente Cloud e Hardware fo
 ## 5. Resultados e Evidências (PoC)
 
 ### 🎥 O Ataque e o Bloqueio
-> *[(Vídeo do projeto](https://share.zight.com/Apu290wA)*
+> *[(Vídeo do projeto][(https://share.zight.com/Apu290wA](https://www.linkedin.com/posts/kaikealmeida_devsecops-aws-cloudsecurity-activity-7406675628910923776-rcmv?utm_source=share&utm_medium=member_desktop&rcm=ACoAADrhebIBrEz-tEpM6kaa2CLxksy8nUDqFdM))*
 
 
 ### Desenvolvido por **Kaike Almeida**
